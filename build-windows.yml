@@ -1,0 +1,67 @@
+name: Buat Installer Windows 11
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Ambil kode aplikasi
+        uses: actions/checkout@v4
+
+      - name: Siapkan Python untuk proses build (otomatis di server)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Unduh FFmpeg untuk disertakan ke aplikasi
+        shell: pwsh
+        run: |
+          $url = "https://github.com/BtbN/FFmpeg-Builds/releases/latest/download/ffmpeg-master-latest-win64-gpl.zip"
+          Invoke-WebRequest -Uri $url -OutFile ffmpeg.zip
+          Expand-Archive -Path ffmpeg.zip -DestinationPath ffmpeg-unpacked -Force
+          $ffmpeg = Get-ChildItem -Path ffmpeg-unpacked -Filter ffmpeg.exe -Recurse | Select-Object -First 1
+          $ffprobe = Get-ChildItem -Path ffmpeg-unpacked -Filter ffprobe.exe -Recurse | Select-Object -First 1
+          if (-not $ffmpeg -or -not $ffprobe) { throw "Berkas FFmpeg/FFprobe tidak ditemukan." }
+          New-Item -ItemType Directory -Force -Path ffmpeg\bin | Out-Null
+          Copy-Item $ffmpeg.FullName ffmpeg\bin\ffmpeg.exe
+          Copy-Item $ffprobe.FullName ffmpeg\bin\ffprobe.exe
+
+      - name: Pasang PyInstaller
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyinstaller
+
+      - name: Buat aplikasi EXE mandiri
+        shell: pwsh
+        run: |
+          python -m PyInstaller --noconfirm --clean --onefile --windowed `
+            --name StudioMusikOtomatis `
+            --add-binary "ffmpeg\bin\ffmpeg.exe;ffmpeg\bin" `
+            --add-binary "ffmpeg\bin\ffprobe.exe;ffmpeg\bin" `
+            studio_musik.py
+          if (-not (Test-Path "dist\StudioMusikOtomatis.exe")) { throw "EXE tidak berhasil dibuat." }
+
+      - name: Pasang Inno Setup
+        shell: pwsh
+        run: choco install innosetup --yes --no-progress
+
+      - name: Buat installer Setup.exe
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { $iscc = "$env:ProgramFiles\Inno Setup 6\ISCC.exe" }
+          & $iscc "StudioMusik.iss"
+          if (-not (Test-Path "installer\Setup_Studio_Musik_Otomatis_Windows11.exe")) { throw "Installer tidak berhasil dibuat." }
+
+      - name: Unggah installer sebagai hasil build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Installer-Studio-Musik-Otomatis-Windows11
+          path: installer/Setup_Studio_Musik_Otomatis_Windows11.exe
+          if-no-files-found: error
+          retention-days: 14
