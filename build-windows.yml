@@ -1,4 +1,4 @@
-name: Buat Installer Windows 11
+name: .github/workflows/build-windows.yml
 
 on:
   workflow_dispatch:
