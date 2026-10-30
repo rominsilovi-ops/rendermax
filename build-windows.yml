@@ -1,0 +1,93 @@
+name: "Buat Installer Windows 11"
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    name: Build aplikasi dan installer Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Ambil kode aplikasi
+        uses: actions/checkout@v4
+
+      - name: Siapkan Python untuk build di server GitHub
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Periksa file proyek
+        shell: pwsh
+        run: |
+          $required = @("studio_musik.py", "StudioMusik.iss")
+          foreach ($file in $required) {
+            if (-not (Test-Path $file)) { throw "File wajib tidak ditemukan: $file" }
+          }
+          $firstLine = Get-Content "StudioMusik.iss" -TotalCount 1
+          if ($firstLine.TrimStart().StartsWith("#")) {
+            throw "Baris pertama StudioMusik.iss tidak boleh berupa komentar dengan tanda #. Gunakan titik koma (;)."
+          }
+
+      - name: Unduh dan siapkan FFmpeg serta FFprobe
+        shell: pwsh
+        run: |
+          $url = "https://github.com/BtbN/FFmpeg-Builds/releases/latest/download/ffmpeg-master-latest-win64-gpl.zip"
+          Invoke-WebRequest -Uri $url -OutFile "ffmpeg.zip"
+          Expand-Archive -Path "ffmpeg.zip" -DestinationPath "ffmpeg-unpacked" -Force
+          $ffmpeg = Get-ChildItem -Path "ffmpeg-unpacked" -Filter "ffmpeg.exe" -Recurse | Select-Object -First 1
+          $ffprobe = Get-ChildItem -Path "ffmpeg-unpacked" -Filter "ffprobe.exe" -Recurse | Select-Object -First 1
+          if (-not $ffmpeg) { throw "ffmpeg.exe tidak ditemukan dalam arsip FFmpeg." }
+          if (-not $ffprobe) { throw "ffprobe.exe tidak ditemukan dalam arsip FFmpeg." }
+          New-Item -ItemType Directory -Force -Path "ffmpeg\bin" | Out-Null
+          Copy-Item $ffmpeg.FullName "ffmpeg\bin\ffmpeg.exe" -Force
+          Copy-Item $ffprobe.FullName "ffmpeg\bin\ffprobe.exe" -Force
+          & "ffmpeg\bin\ffmpeg.exe" -version
+          if ($LASTEXITCODE -ne 0) { throw "FFmpeg tidak dapat dijalankan." }
+
+      - name: Pasang PyInstaller
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyinstaller
+          if ($LASTEXITCODE -ne 0) { throw "Instalasi PyInstaller gagal." }
+
+      - name: Buat EXE mandiri beserta FFmpeg
+        shell: pwsh
+        run: |
+          python -m PyInstaller --noconfirm --clean --onefile --windowed `
+            --name "StudioMusikOtomatis" `
+            --add-binary "ffmpeg\bin\ffmpeg.exe;ffmpeg\bin" `
+            --add-binary "ffmpeg\bin\ffprobe.exe;ffmpeg\bin" `
+            "studio_musik.py"
+          if ($LASTEXITCODE -ne 0) { throw "PyInstaller gagal membuat aplikasi EXE." }
+          if (-not (Test-Path "dist\StudioMusikOtomatis.exe")) { throw "EXE hasil build tidak ditemukan." }
+
+      - name: Pasang Inno Setup
+        shell: pwsh
+        run: |
+          choco install innosetup --yes --no-progress
+          if ($LASTEXITCODE -ne 0) { throw "Instalasi Inno Setup gagal." }
+
+      - name: Kompilasi installer Windows
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { $iscc = "$env:ProgramFiles\Inno Setup 6\ISCC.exe" }
+          if (-not (Test-Path $iscc)) { throw "ISCC.exe tidak ditemukan setelah Inno Setup dipasang." }
+          & $iscc "/Qp" "StudioMusik.iss"
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup gagal mengompilasi StudioMusik.iss. Periksa log di atas." }
+          $installer = "installer\Setup_Studio_Musik_Otomatis_Windows11.exe"
+          if (-not (Test-Path $installer)) { throw "Installer tidak ditemukan: $installer" }
+          Get-Item $installer | Format-List FullName, Length
+
+      - name: Unggah installer sebagai artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Installer-Studio-Musik-Otomatis-Windows11
+          path: installer/Setup_Studio_Musik_Otomatis_Windows11.exe
+          if-no-files-found: error
+          retention-days: 14

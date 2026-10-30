@@ -1,44 +1,50 @@
-STUDIO MUSIK OTOMATIS — BUILD INSTALLER WINDOWS 11 TANPA PYTHON DI PC ANDA
-=============================================================================
+STUDIO MUSIK OTOMATIS — PAKET PEMBUAT INSTALLER WINDOWS 11
+===========================================================
 
-Paket ini menyiapkan proses pembuatan installer Windows melalui GitHub Actions.
-Python dan FFmpeg dipasang otomatis di komputer build milik GitHub, bukan di PC Anda.
-Installer hasilnya akan menyertakan FFmpeg/FFprobe agar aplikasi bisa langsung
-dipakai setelah dipasang.
+Paket ini membuat installer Windows melalui GitHub Actions. Python, PyInstaller,
+FFmpeg, FFprobe, dan Inno Setup dipasang otomatis pada komputer build milik
+GitHub. Anda tidak perlu memasang Python atau FFmpeg di PC Windows 11 Anda.
 
 PENTING
-- Saya tidak dapat mengompilasi atau menguji file .EXE Windows langsung dari
-  lingkungan ini. Proses build harus berjalan di Windows runner.
-- Anda memerlukan akun GitHub dan koneksi internet satu kali untuk membuat installer.
-- Setelah installer selesai diunduh dan dipasang, aplikasi berjalan secara lokal.
-- FFmpeg disertakan ke dalam aplikasi hasil build.
+- Ini adalah paket sumber dan konfigurasi build, bukan installer EXE yang sudah jadi.
+- Build memerlukan koneksi internet dan akun GitHub.
+- Setelah installer diunduh dan dipasang, proses render berjalan lokal di PC.
+- Build belum dapat dijamin berhasil sebelum workflow selesai dijalankan di runner Windows.
 
-CARA MENDAPATKAN INSTALLER
-1. Buat akun atau masuk ke https://github.com
-2. Buat repository baru, misalnya: studio-musik-otomatis
-3. Unggah seluruh isi folder paket ini ke repository tersebut. Pastikan folder
-   .github/workflows/build-windows.yml ikut terunggah.
-4. Buka tab Actions di repository.
-5. Pilih workflow "Buat Installer Windows 11".
-6. Klik tombol "Run workflow", lalu klik tombol hijau "Run workflow".
-7. Tunggu sampai proses selesai dengan status hijau (sekitar beberapa menit,
-   bergantung antrean dan unduhan).
-8. Buka hasil workflow yang selesai, cari bagian Artifacts, lalu unduh
-   "Installer-Studio-Musik-Otomatis-Windows11".
-9. Ekstrak ZIP artifact, kemudian klik dua kali:
-   Setup_Studio_Musik_Otomatis_Windows11.exe
-10. Ikuti langkah pemasangan. Pintasan aplikasi akan dibuat di Desktop.
+CARA UPLOAD KE GITHUB
+1. Buat atau buka repository GitHub.
+2. Ekstrak ZIP ini di komputer.
+3. Unggah SELURUH ISI folder hasil ekstrak ke halaman utama repository, bukan folder induknya.
+4. Pastikan susunannya persis seperti berikut:
+   .github/workflows/build-windows.yml
+   studio_musik.py
+   StudioMusik.iss
+   PETUNJUK_INSTALLER.txt
+5. Klik Commit changes.
 
-PENGGUNAAN
-1. Buka Studio Musik Otomatis dari Desktop.
-2. Pilih video latar.
-3. Tambahkan file lagu.
-4. Atur urutan lagu dan pilihan video.
-5. Pilih folder hasil.
-6. Klik MULAI MEMBUAT VIDEO.
+CARA MEMBUAT INSTALLER
+1. Buka tab Actions di repository.
+2. Pilih workflow "Buat Installer Windows 11".
+3. Klik Run workflow, pilih branch main, lalu klik Run workflow sekali lagi.
+4. Tunggu hingga status hijau (centang).
+5. Buka hasil run yang berhasil dan unduh artifact bernama
+   Installer-Studio-Musik-Otomatis-Windows11.
+6. Ekstrak ZIP artifact dan jalankan
+   Setup_Studio_Musik_Otomatis_Windows11.exe.
+
+JIKA BUILD GAGAL
+Buka job yang merah, perluas langkah yang merah, lalu salin pesan error terakhir.
+Jangan menjalankan ulang berulang kali sebelum penyebab error diperiksa.
+
+FITUR APLIKASI
+- Menambahkan beberapa file audio dan mengatur urutan playlist.
+- Memilih video latar yang diputar berulang.
+- Menampilkan judul lagu berdasarkan urutan waktu.
+- Mengatur crossfade antar lagu.
+- Mengekspor video MP4 landscape 16:9 atau portrait 9:16.
+- Membuat timestamp YouTube dan playlist M3U.
 
 CATATAN
-- Semua menu aplikasi menggunakan Bahasa Indonesia.
-- Aplikasi menghasilkan MP4, berkas penanda waktu YouTube, dan daftar putar.
-- Rendering 4K dan ratusan lagu membutuhkan kapasitas komputer yang cukup.
+- Uji dahulu dengan beberapa lagu sebelum proyek panjang.
+- Render 2K/4K dan playlist ratusan lagu memerlukan ruang disk, memori, dan waktu besar.
 - Gunakan musik dan video yang Anda miliki atau berizin untuk digunakan.
