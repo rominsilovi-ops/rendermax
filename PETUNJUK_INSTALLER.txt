@@ -1,0 +1,44 @@
+STUDIO MUSIK OTOMATIS — BUILD INSTALLER WINDOWS 11 TANPA PYTHON DI PC ANDA
+=============================================================================
+
+Paket ini menyiapkan proses pembuatan installer Windows melalui GitHub Actions.
+Python dan FFmpeg dipasang otomatis di komputer build milik GitHub, bukan di PC Anda.
+Installer hasilnya akan menyertakan FFmpeg/FFprobe agar aplikasi bisa langsung
+dipakai setelah dipasang.
+
+PENTING
+- Saya tidak dapat mengompilasi atau menguji file .EXE Windows langsung dari
+  lingkungan ini. Proses build harus berjalan di Windows runner.
+- Anda memerlukan akun GitHub dan koneksi internet satu kali untuk membuat installer.
+- Setelah installer selesai diunduh dan dipasang, aplikasi berjalan secara lokal.
+- FFmpeg disertakan ke dalam aplikasi hasil build.
+
+CARA MENDAPATKAN INSTALLER
+1. Buat akun atau masuk ke https://github.com
+2. Buat repository baru, misalnya: studio-musik-otomatis
+3. Unggah seluruh isi folder paket ini ke repository tersebut. Pastikan folder
+   .github/workflows/build-windows.yml ikut terunggah.
+4. Buka tab Actions di repository.
+5. Pilih workflow "Buat Installer Windows 11".
+6. Klik tombol "Run workflow", lalu klik tombol hijau "Run workflow".
+7. Tunggu sampai proses selesai dengan status hijau (sekitar beberapa menit,
+   bergantung antrean dan unduhan).
+8. Buka hasil workflow yang selesai, cari bagian Artifacts, lalu unduh
+   "Installer-Studio-Musik-Otomatis-Windows11".
+9. Ekstrak ZIP artifact, kemudian klik dua kali:
+   Setup_Studio_Musik_Otomatis_Windows11.exe
+10. Ikuti langkah pemasangan. Pintasan aplikasi akan dibuat di Desktop.
+
+PENGGUNAAN
+1. Buka Studio Musik Otomatis dari Desktop.
+2. Pilih video latar.
+3. Tambahkan file lagu.
+4. Atur urutan lagu dan pilihan video.
+5. Pilih folder hasil.
+6. Klik MULAI MEMBUAT VIDEO.
+
+CATATAN
+- Semua menu aplikasi menggunakan Bahasa Indonesia.
+- Aplikasi menghasilkan MP4, berkas penanda waktu YouTube, dan daftar putar.
+- Rendering 4K dan ratusan lagu membutuhkan kapasitas komputer yang cukup.
+- Gunakan musik dan video yang Anda miliki atau berizin untuk digunakan.
